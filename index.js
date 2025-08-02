@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 
 app.use(cors())
+app.use(express.static('dist'))
 
 let notes = [
   {
@@ -42,7 +43,7 @@ app.get('/api/notes', (request, response) => {
 })
 
 app.get('/api/notes/:id', (request, response) => {
-  const id = request.params.id
+  const id = String(request.params.id)
   const note = notes.find((note) => note.id === id)
 
   if (note) {
@@ -79,12 +80,25 @@ app.post('/api/notes', (request, response) => {
 })
 
 app.delete('/api/notes/:id', (request, response) => {
-  const id = request.params.id
+  const id = String(request.params.id)
   notes = notes.filter((note) => note.id !== id)
 
   response.status(204).end()
 })
 
+app.put('/api/notes/:id', (request, response) => {
+  const id = String(request.params.id)
+  const body = request.body
+
+  const note = notes.find(note => note.id === id)
+  if (!note) {
+    return response.status(404).json({ error: 'note not found' })
+  }
+
+  const updatedNote = { ...note, ...body }
+  notes = notes.map(n => n.id === id ? updatedNote : n)
+  response.json(updatedNote)
+})
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
